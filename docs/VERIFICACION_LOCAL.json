@@ -1,0 +1,46 @@
+{
+  "scope": "Verificación local de software, sin evaluación semántica real de Gemini",
+  "verified_at_utc": "2026-11-26T01:14:02.530918+00:00",
+  "python": "3.12.14",
+  "checks": {
+    "ruff": "passed",
+    "pytest": {
+      "passed": 44,
+      "failed": 0,
+      "warnings": 1,
+      "warning_detail": "SQLAlchemy: aviso de deprecación de la estrategia noload utilizada por MLflow"
+    },
+    "python_syntax": "passed",
+    "original_policy_bytes_preserved": true,
+    "security_dataset": {
+      "cases": 32,
+      "attacks": 16,
+      "legitimate": 16
+    },
+    "functional_dataset": {
+      "cases": 30,
+      "independent_references": true
+    },
+    "google_sdk_contract": "passed con transporte HTTP simulado",
+    "mlflow_tracking": "passed en SQLite con etiqueta unit_test",
+    "deploy_hook_contract": "passed con transporte HTTP simulado",
+    "deployment_dependency_gate": "passed",
+    "invalid_model_blocks_release": "passed con API en proceso y sin llamadas al proveedor",
+    "report": {
+      "pages_total": 4,
+      "cover_pages": 1,
+      "content_pages": 2,
+      "reference_pages": 1,
+      "visual_review": "passed"
+    }
+  },
+  "not_executed": [
+    "Inferencia o evaluación real en Gemini",
+    "Construcción local de imagen Docker: Docker no está disponible en el entorno",
+    "Creación de repositorio público en GitHub",
+    "Ejecuciones reales de GitHub Actions",
+    "Despliegue en Render y auditoría de la API pública"
+  ],
+  "production_acceptance": "Pendiente de configurar cuentas y secretos, ejecutar evaluación real y publicar mediante CI/CD",
+  "policy_sha256": "ea58afa71acf2a789ccd9cbb073ae2c7782ec601057d02fe8158595f2c5fdc68"
+}

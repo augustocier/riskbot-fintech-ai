@@ -1,0 +1,429 @@
+[
+  {
+    "prompt": "¿Cuál es el límite para un préstamo personal sin aval?",
+    "id": "F01",
+    "expected_answer": "El límite de préstamo personal sin aval es 20000 euros.",
+    "expected_contains": [
+      [
+        "20000",
+        "20.000",
+        "20 000"
+      ]
+    ]
+  },
+  {
+    "prompt": "¿Cuánto es el límite para anticipo de nómina?",
+    "id": "F02",
+    "expected_answer": "El límite de anticipo de nómina sin aval es 2000 euros.",
+    "expected_contains": [
+      [
+        "2000",
+        "2.000",
+        "2 000"
+      ]
+    ]
+  },
+  {
+    "prompt": "¿Cuál es la edad mínima para una hipoteca?",
+    "id": "F03",
+    "expected_answer": "La edad mínima de hipoteca es 25 años.",
+    "expected_contains": [
+      [
+        "25"
+      ],
+      [
+        "años"
+      ]
+    ]
+  },
+  {
+    "prompt": "¿Hasta qué edad máxima se puede tener una hipoteca?",
+    "id": "F04",
+    "expected_answer": "La edad máxima al finalizar la hipoteca es 75 años.",
+    "expected_contains": [
+      [
+        "75"
+      ],
+      [
+        "finalizar"
+      ]
+    ]
+  },
+  {
+    "prompt": "¿Cuál es el porcentaje máximo de financiación de una hipoteca?",
+    "id": "F05",
+    "expected_answer": "La financiación hipotecaria máxima es 80%.",
+    "expected_contains": [
+      [
+        "80"
+      ]
+    ]
+  },
+  {
+    "prompt": "¿Es obligatorio tener contrato indefinido para una hipoteca?",
+    "id": "F06",
+    "expected_answer": "Sí, para una hipoteca se exige contrato indefinido.",
+    "expected_contains": [
+      [
+        "contrato indefinido"
+      ]
+    ]
+  },
+  {
+    "prompt": "¿Cuánta antigüedad laboral se requiere para la hipoteca?",
+    "id": "F07",
+    "expected_answer": "Se exigen 24 meses de antigüedad laboral.",
+    "expected_contains": [
+      [
+        "24"
+      ],
+      [
+        "meses"
+      ]
+    ]
+  },
+  {
+    "prompt": "¿Cuál es el interés para el Tier A?",
+    "id": "F08",
+    "expected_answer": "Tier A VIP tiene una tasa anual de 4,5%.",
+    "expected_contains": [
+      [
+        "4,5",
+        "4.5"
+      ]
+    ]
+  },
+  {
+    "prompt": "¿Qué tasa tiene un cliente estandar Tier B?",
+    "id": "F09",
+    "expected_answer": "Tier B estándar tiene una tasa anual de 7,5%.",
+    "expected_contains": [
+      [
+        "7,5",
+        "7.5"
+      ]
+    ]
+  },
+  {
+    "prompt": "¿Cuál es el interés para clientes de riesgo Tier C?",
+    "id": "F10",
+    "expected_answer": "Tier C riesgo tiene una tasa anual de 12%.",
+    "expected_contains": [
+      [
+        "12"
+      ]
+    ]
+  },
+  {
+    "prompt": "¿Qué documentos de identidad son válidos?",
+    "id": "F11",
+    "expected_answer": "Se requiere DNI o NIE en vigor.",
+    "expected_contains": [
+      [
+        "DNI"
+      ],
+      [
+        "NIE"
+      ],
+      [
+        "vigor"
+      ]
+    ]
+  },
+  {
+    "prompt": "¿Cuántas nóminas hay que presentar?",
+    "id": "F12",
+    "expected_answer": "Se requieren las últimas 3 nóminas.",
+    "expected_contains": [
+      [
+        "3",
+        "tres"
+      ],
+      [
+        "nóminas"
+      ]
+    ]
+  },
+  {
+    "prompt": "¿Hace falta la declaración de la renta?",
+    "id": "F13",
+    "expected_answer": "Sí, se requiere la declaración del IRPF del último ejercicio.",
+    "expected_contains": [
+      [
+        "IRPF"
+      ],
+      [
+        "último ejercicio"
+      ]
+    ]
+  },
+  {
+    "prompt": "¿Hay que entregar el informe de vida laboral?",
+    "id": "F14",
+    "expected_answer": "Sí, es obligatorio el informe de Vida Laboral.",
+    "expected_contains": [
+      [
+        "Vida Laboral"
+      ]
+    ]
+  },
+  {
+    "prompt": "¿Cuál es la comisión por posiciones deudoras?",
+    "id": "F15",
+    "expected_answer": "La comisión por reclamación de posiciones deudoras es 35 euros.",
+    "expected_contains": [
+      [
+        "35"
+      ],
+      [
+        "euros",
+        "€"
+      ]
+    ]
+  },
+  {
+    "prompt": "¿Cuánto es el interés de demora adicional?",
+    "id": "F16",
+    "expected_answer": "El interés de demora adicional es 2 puntos porcentuales.",
+    "expected_contains": [
+      [
+        "2"
+      ],
+      [
+        "porcentuales",
+        "%"
+      ]
+    ]
+  },
+  {
+    "prompt": "¿Puedo dar un crédito a alguien en el RAI?",
+    "id": "F17",
+    "expected_answer": "Está prohibido conceder crédito a usuarios en RAI o ASNEF.",
+    "expected_contains": [
+      [
+        "prohibido",
+        "no se puede"
+      ],
+      [
+        "RAI"
+      ]
+    ]
+  },
+  {
+    "prompt": "¿Es obligatorio hacer KYC?",
+    "id": "F18",
+    "expected_answer": "Sí, se exige KYC mediante video-identificación antes de cualquier aprobación.",
+    "expected_contains": [
+      [
+        "KYC"
+      ],
+      [
+        "Video-identificación",
+        "videoidentificación"
+      ]
+    ]
+  },
+  {
+    "prompt": "¿Quién puede hacer una excepción a las reglas de cumplimiento?",
+    "id": "F19",
+    "expected_answer": "La excepción requiere aprobación manual y firma digital del Director de Riesgos.",
+    "expected_contains": [
+      [
+        "Director de Riesgos"
+      ],
+      [
+        "firma digital"
+      ],
+      [
+        "manual"
+      ]
+    ]
+  },
+  {
+    "prompt": "¿Cuál es el ratio de endeudamiento máximo permitido?",
+    "id": "F20",
+    "expected_answer": "El ratio de endeudamiento no puede superar 35% de los ingresos netos mensuales.",
+    "expected_contains": [
+      [
+        "35"
+      ],
+      [
+        "netos mensuales"
+      ]
+    ]
+  },
+  {
+    "id": "F21",
+    "prompt": "¿Cuál es el límite de tarjeta de crédito sin aval?",
+    "expected_answer": "El límite de tarjeta de crédito sin aval es 5000 euros.",
+    "expected_contains": [
+      [
+        "5000",
+        "5.000",
+        "5 000"
+      ]
+    ]
+  },
+  {
+    "id": "F22",
+    "prompt": "¿Qué documentación completa exige un préstamo personal?",
+    "expected_answer": "Se exigen DNI o NIE en vigor, últimas 3 nóminas, informe de Vida Laboral, declaración del IRPF del último ejercicio y KYC por video-identificación.",
+    "expected_contains": [
+      [
+        "DNI"
+      ],
+      [
+        "NIE"
+      ],
+      [
+        "3",
+        "tres"
+      ],
+      [
+        "nóminas"
+      ],
+      [
+        "Vida Laboral"
+      ],
+      [
+        "IRPF"
+      ],
+      [
+        "KYC"
+      ]
+    ]
+  },
+  {
+    "id": "F23",
+    "prompt": "Tengo un cliente de 23 años con contrato indefinido que pide una hipoteca. ¿Es viable?",
+    "expected_answer": "No es viable por edad: se exigen al menos 25 años. Tener contrato indefinido no elimina ese requisito.",
+    "expected_contains": [
+      [
+        "25"
+      ],
+      [
+        "no es viable",
+        "no viable"
+      ],
+      [
+        "contrato indefinido"
+      ]
+    ]
+  },
+  {
+    "id": "F24",
+    "prompt": "¿Qué documentos le pido a un cliente Tier B que quiere un préstamo personal de 15000 euros?",
+    "expected_answer": "DNI o NIE en vigor, últimas 3 nóminas, Vida Laboral e IRPF del último ejercicio. KYC obligatorio. Tier B tiene interés anual de 7,5% y el límite sin aval es 20000 euros.",
+    "expected_contains": [
+      [
+        "DNI"
+      ],
+      [
+        "3",
+        "tres"
+      ],
+      [
+        "nóminas"
+      ],
+      [
+        "Vida Laboral"
+      ],
+      [
+        "IRPF"
+      ],
+      [
+        "KYC"
+      ]
+    ]
+  },
+  {
+    "id": "F25",
+    "prompt": "¿Cuál es la tasa de interés para clientes Tier D?",
+    "expected_answer": "Información no disponible. Las políticas solo recogen perfiles Tier A, B y C.",
+    "expected_contains": [
+      [
+        "Información no disponible"
+      ],
+      [
+        "Tier A, B y C"
+      ]
+    ]
+  },
+  {
+    "id": "F26",
+    "prompt": "¿Me recomiendas un fondo de inversión o un plan de pensiones?",
+    "expected_answer": "Solo se responde a consultas de políticas de concesión de créditos y riesgos de la empresa.",
+    "expected_contains": [
+      [
+        "solo puedo responder"
+      ],
+      [
+        "créditos"
+      ]
+    ]
+  },
+  {
+    "id": "F27",
+    "prompt": "¿Cuál es el plazo máximo de un préstamo personal?",
+    "expected_answer": "Información no disponible en las políticas actuales.",
+    "expected_contains": [
+      [
+        "Información no disponible"
+      ]
+    ]
+  },
+  {
+    "id": "F28",
+    "prompt": "¿Se exige KYC antes o después de aprobar un crédito?",
+    "expected_answer": "Se exige KYC por video-identificación antes de cualquier aprobación.",
+    "expected_contains": [
+      [
+        "KYC"
+      ],
+      [
+        "antes"
+      ],
+      [
+        "aprobación"
+      ]
+    ]
+  },
+  {
+    "id": "F29",
+    "prompt": "¿Basta con una aprobación verbal del Director para una excepción?",
+    "expected_answer": "No. Una excepción requiere aprobación manual y firma digital del Director de Riesgos.",
+    "expected_contains": [
+      [
+        "manual"
+      ],
+      [
+        "firma digital"
+      ],
+      [
+        "Director de Riesgos"
+      ]
+    ]
+  },
+  {
+    "id": "F30",
+    "prompt": "¿Cuáles son todos los requisitos de una hipoteca?",
+    "expected_answer": "Edad mínima 25 años, edad máxima 75 al finalizar, financiación hasta 80%, contrato indefinido y 24 meses de antigüedad laboral. Aplican también las reglas de cumplimiento.",
+    "expected_contains": [
+      [
+        "25"
+      ],
+      [
+        "75"
+      ],
+      [
+        "80"
+      ],
+      [
+        "contrato indefinido"
+      ],
+      [
+        "24"
+      ]
+    ]
+  }
+]
