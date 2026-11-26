@@ -1,0 +1,84 @@
+name: RiskBot CI CD
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+# Un push posterior no debe cancelar una liberación ya solicitada a Render.
+concurrency:
+  group: riskbot-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: pip
+      - run: pip install -r requirements-test.txt
+      - run: ruff check .
+      - run: pytest -q
+      - name: Construir contenedor y comprobar usuario
+        run: |
+          docker build -t riskbot:${{ github.sha }} .
+          test "$(docker image inspect riskbot:${{ github.sha }} --format '{{.Config.User}}')" = "10001:10001"
+
+  evaluate:
+    needs: tests
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+      DEFAULT_MODEL: gemini-3.5-flash-lite
+      ALLOWED_MODELS: gemini-3.5-flash-lite
+      JUDGE_MODEL: gemini-3.5-flash-lite
+      EVALUATOR_MODEL: gemini-3.5-flash-lite
+      EVAL_MODEL: gemini-3.5-flash-lite
+      EVAL_REQUEST_INTERVAL_SECONDS: '1'
+      MLFLOW_TRACKING_URI: sqlite:///mlflow.db
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: pip
+      - run: pip install -r requirements-test.txt
+      - name: Evaluar calidad y seguridad con el proveedor real
+        run: python eval.py
+      - name: Conservar métricas incluso cuando el gate rechaza la versión
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: riskbot-evaluation-${{ github.sha }}
+          path: |
+            artifacts/
+            mlflow.db
+            mlartifacts/
+          if-no-files-found: warn
+          retention-days: 30
+
+  deploy:
+    needs: evaluate
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      RENDER_DEPLOY_HOOK: ${{ secrets.RENDER_DEPLOY_HOOK }}
+      RENDER_API_URL: ${{ vars.RENDER_API_URL }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: pip install httpx==0.28.1
+      - name: Desplegar el commit evaluado y verificarlo en producción
+        run: python scripts/deploy.py
