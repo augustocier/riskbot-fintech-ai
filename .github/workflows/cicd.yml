@@ -43,7 +43,7 @@ jobs:
       ALLOWED_MODELS: gemini-3.5-flash-lite
       JUDGE_MODEL: gemini-3.5-flash-lite
       EVALUATOR_MODEL: gemini-3.5-flash-lite
-      EVAL_MODEL: modelo-no-autorizado
+      EVAL_MODEL: gemini-3.5-flash-lite
       EVAL_REQUEST_INTERVAL_SECONDS: '1'
       MLFLOW_TRACKING_URI: sqlite:///mlflow.db
     steps:
