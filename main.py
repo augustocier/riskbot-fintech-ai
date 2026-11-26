@@ -10,6 +10,7 @@ import re
 import time
 import unicodedata
 import uuid
+from collections import deque
 from contextlib import asynccontextmanager
 from dataclasses import dataclass
 from pathlib import Path
@@ -74,7 +75,7 @@ class InferenceRequest(StrictModel):
         value = unicodedata.normalize("NFKC", value).strip()
         if not 5 <= len(value) <= 1500:
             raise ValueError("Entrada inválida")
-        punctuation = set(" .,;:!?¿¡€%+-/()'\"\n")
+        punctuation = set(" .,;:!?¿¡€%+-_/()'\"\n")
         if any(
             not (unicodedata.category(c).startswith(("L", "N")) or c in punctuation)
             for c in value
@@ -102,19 +103,40 @@ class SecurityVerdict(StrictModel):
     ]
 
 
-class AnswerPlan(StrictModel):
-    status: Literal["answer", "not_available", "out_of_scope", "refuse"]
-    fact_ids: list[str] = Field(max_length=16)
-
-
 class Backend(Protocol):
     async def generate(
         self, *, model: str, system: str, user: str, schema: type[T]
     ) -> T: ...
 
 
+class ProviderPacer:
+    """Espaciado compartido por el juez, el asistente y el evaluador de una ejecución."""
+
+    def __init__(self, interval: float, *, clock=time.monotonic, sleep=asyncio.sleep):
+        if not 0 <= interval <= 60:
+            raise ValueError("Intervalo del proveedor inválido")
+        self.interval, self.clock, self.sleep = interval, clock, sleep
+        self.last_started = None
+        self.lock = asyncio.Lock()
+
+    @classmethod
+    def from_env(cls):
+        default = "6" if os.getenv("CI", "").lower() == "true" else "0"
+        return cls(float(os.getenv("GEMINI_MIN_INTERVAL_SECONDS", default)))
+
+    async def wait(self):
+        if not self.interval:
+            return
+        async with self.lock:
+            if self.last_started is not None:
+                delay = self.interval - (self.clock() - self.last_started)
+                if delay > 0:
+                    await self.sleep(delay)
+            self.last_started = self.clock()
+
+
 class GeminiBackend:
-    def __init__(self, api_key: str, timeout_seconds: float):
+    def __init__(self, api_key: str, timeout_seconds: float, *, pacer=None):
         from google import genai
         from google.genai import types
 
@@ -122,14 +144,20 @@ class GeminiBackend:
             api_key=api_key,
             http_options=types.HttpOptions(
                 timeout=int(timeout_seconds * 1000),
-                retry_options=types.HttpRetryOptions(attempts=1),
+                retry_options=types.HttpRetryOptions(
+                    attempts=3, initial_delay=5, max_delay=20,
+                    exp_base=2, jitter=1,
+                    http_status_codes=[429, 500, 502, 503, 504],
+                ),
             ),
         )
         self.timeout = timeout_seconds
+        self.pacer = pacer if pacer is not None else ProviderPacer.from_env()
 
     async def generate(self, *, model, system, user, schema):
         from google.genai import types
 
+        await self.pacer.wait()
         response = await asyncio.wait_for(
             self.client.aio.models.generate_content(
                 model=model,
@@ -232,6 +260,13 @@ def build_facts(data: dict) -> dict[str, str]:
 
 POLICIES, POLICY_SHA256 = load_policy(ROOT / "politicas_credito.json")
 FACTS = build_facts(POLICIES)
+FactId = Literal[tuple(FACTS)]
+
+
+class AnswerPlan(StrictModel):
+    status: Literal["answer", "not_available", "out_of_scope", "refuse"]
+    # El esquema enviado a Gemini contiene la lista exacta de hechos autorizados.
+    fact_ids: list[FactId] = Field(max_length=16)
 
 
 def render_answer(plan: AnswerPlan, facts: dict[str, str], question: str) -> str:
@@ -297,12 +332,21 @@ def create_app(backend: Backend | None = None, settings: Settings | None = None)
         if owned:
             await owned.close()
 
-    api = FastAPI(title="RiskBot API de FinTech-AI", version="1.0.0", lifespan=lifespan)
+    api = FastAPI(title="RiskBot API de FinTech-AI", version="1.0.1", lifespan=lifespan)
     api.state.backend = backend
+    api.state.diagnostics = deque(maxlen=256)
     api.add_middleware(BodyLimitMiddleware)
+
+    def record_diagnostic(request, stage, kind, provider_status=None):
+        api.state.diagnostics.append({
+            "request_id": getattr(request.state, "request_id", None),
+            "stage": stage, "kind": kind,
+            "provider_status": provider_status if isinstance(provider_status, int) else None,
+        })
 
     @api.exception_handler(RequestValidationError)
     async def validation_error(request, exc):
+        record_diagnostic(request, "input", "validation")
         return JSONResponse({"detail": DENIED}, status_code=400)
 
     @api.exception_handler(StarletteHTTPException)
@@ -320,6 +364,7 @@ def create_app(backend: Backend | None = None, settings: Settings | None = None)
     @api.middleware("http")
     async def audit(request: Request, call_next):
         request_id = uuid.uuid4().hex
+        request.state.request_id = request_id
         started = time.perf_counter()
         response = await call_next(request)
         response.headers["X-Request-ID"] = request_id
@@ -343,14 +388,17 @@ def create_app(backend: Backend | None = None, settings: Settings | None = None)
         }
 
     @api.post("/inferencia", response_model=InferenceResponse)
-    async def inferencia(payload: InferenceRequest):
+    async def inferencia(payload: InferenceRequest, http_request: Request):
         selected_model = payload.model or settings.default_model
         if selected_model not in settings.allowed_models:
+            record_diagnostic(http_request, "input", "unauthorized_model")
             raise HTTPException(400, DENIED)
         service = api.state.backend
         if service is None:
+            record_diagnostic(http_request, "configuration", "missing_provider")
             raise HTTPException(503, UNAVAILABLE)
         user = f"<user_prompt>{html.escape(payload.prompt)}</user_prompt>"
+        phase, failure_kind = "judge", "policy_block"
         try:
             await asyncio.wait_for(api.state.slots.acquire(), timeout=2.0)
         except TimeoutError:
@@ -363,9 +411,11 @@ def create_app(backend: Backend | None = None, settings: Settings | None = None)
                 )
                 verdict = SecurityVerdict.model_validate(verdict)
             except (ValueError, ValidationError):
+                failure_kind = "invalid_judge_output"
                 raise HTTPException(403, DENIED) from None
             if verdict.decision != "allow":
                 raise HTTPException(403, DENIED)
+            phase, failure_kind = "answer", "output_block"
             grounded_system = (
                 ANSWER_SYSTEM + "\n<politicas>" + html.escape(json.dumps(POLICIES, ensure_ascii=False))
                 + "</politicas>\n<catalogo>" + html.escape(json.dumps(FACTS, ensure_ascii=False)) + "</catalogo>"
@@ -376,11 +426,16 @@ def create_app(backend: Backend | None = None, settings: Settings | None = None)
             plan = AnswerPlan.model_validate(plan)
             return InferenceResponse(resultado=render_answer(plan, FACTS, payload.prompt))
         except HTTPException:
+            record_diagnostic(http_request, phase, failure_kind)
             raise
         except (ValueError, ValidationError):
+            record_diagnostic(http_request, phase, "invalid_output")
             raise HTTPException(403, DENIED) from None
         except Exception as exc:
-            LOGGER.warning("provider_unavailable type=%s", type(exc).__name__)
+            code = getattr(exc, "code", None)
+            safe_code = code if isinstance(code, int) else None
+            record_diagnostic(http_request, phase, "provider_error", safe_code)
+            LOGGER.warning("provider_unavailable type=%s code=%s", type(exc).__name__, safe_code)
             raise HTTPException(503, UNAVAILABLE) from None
         finally:
             api.state.slots.release()

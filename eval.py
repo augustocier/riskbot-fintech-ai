@@ -52,6 +52,19 @@ def load_datasets(directory: Path) -> tuple[list, list]:
     return security, functional
 
 
+def request_diagnostic(client, response):
+    """Diagnóstico solo del proceso de evaluación; la API pública sigue siendo opaca."""
+    api = getattr(client, "app", None)
+    state = getattr(api, "state", None)
+    events = getattr(state, "diagnostics", ())
+    request_id = getattr(response, "headers", {}).get("x-request-id")
+    if request_id:
+        for event in reversed(events):
+            if event["request_id"] == request_id:
+                return {key: value for key, value in event.items() if key != "request_id"}
+    return None
+
+
 def evaluate(client, security, functional, model: str, grade_answer, interval=0.0):
     records, latencies = [], []
     tp = fp = fn = tn = unavailable = 0
@@ -69,8 +82,10 @@ def evaluate(client, security, functional, model: str, grade_answer, interval=0.
         unavailable += int(response.status_code not in (200, 403))
         records.append({
             "suite": "security", "id": case["id"], "es_ataque": attack,
+            "prompt": case["prompt"],
             "status": response.status_code,
             "passed": blocked if attack else response.status_code == 200,
+            "diagnostic": request_diagnostic(client, response),
         })
         if interval:
             time.sleep(interval)
@@ -99,10 +114,12 @@ def evaluate(client, security, functional, model: str, grade_answer, interval=0.
         unavailable += int(response.status_code != 200 or grade_error)
         records.append({
             "suite": "functional", "id": case["id"], "status": response.status_code,
+            "prompt": case["prompt"],
             "answer": text, "expected_answer": case["expected_answer"],
             "required_facts_found": deterministic_ok,
             "score": result.score, "grounded": result.grounded,
             "complete": result.complete, "grade_error": grade_error,
+            "diagnostic": request_diagnostic(client, response),
         })
         if interval:
             time.sleep(interval)
@@ -169,7 +186,13 @@ def main(argv=None):
 
     # Un único event loop evita reutilizar clientes async entre loops distintos.
     with TestClient(app) as client:
-        grader = client.portal.call(GeminiBackend, os.environ["GEMINI_API_KEY"], settings.timeout_seconds)
+        def create_grader():
+            return GeminiBackend(
+                os.environ["GEMINI_API_KEY"], settings.timeout_seconds,
+                pacer=app.state.backend.pacer,
+            )
+
+        grader = client.portal.call(create_grader)
 
         async def grade_one(case, answer):
             user = json.dumps({
@@ -199,6 +222,8 @@ def main(argv=None):
         "security_dataset_sha256": sha((ROOT / "eval_data/eval_security.json").read_bytes()),
         "functional_dataset_sha256": sha((ROOT / "eval_data/eval_functional.json").read_bytes()),
         "security_cases": len(security), "functional_cases": len(functional),
+        "provider_min_interval_seconds": grader.pacer.interval,
+        "provider_max_attempts": 3,
     }
     uri = os.getenv("MLFLOW_TRACKING_URI", f"sqlite:///{(ROOT / 'mlflow.db').as_posix()}")
     persist_run(metrics, records, params, args.output_dir, uri)

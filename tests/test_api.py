@@ -101,7 +101,7 @@ def test_invalid_judge_output_fails_closed(verdict):
 
 @pytest.mark.parametrize("plan", [
     AnswerPlan(status="refuse", fact_ids=[]),
-    AnswerPlan(status="answer", fact_ids=["tasas.tier_D_inventado"]),
+    {"status": "answer", "fact_ids": ["tasas.tier_D_inventado"]},
     AnswerPlan(status="answer", fact_ids=[]),
     AnswerPlan(status="not_available", fact_ids=["tasas.tier_B_estandar"]),
 ])
